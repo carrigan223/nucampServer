@@ -31,11 +31,46 @@ var app = express();
 // view engine setup
 app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "jade");
-
+// list of middleware 'next' is running through
 app.use(logger("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
+
+//
+//
+//this is where authentication will take place 
+//this is the first middleware that is sending back to client
+//so if auth fails here everything is locked after
+
+/*this next lets us know if truthy move on to next middleware*/
+function auth(req,res,next) {
+  console.log(req.headers);
+  const authHeader = req.headers.authorization;
+    if (!authHeader) {
+      const err = new Error("You are not authenticated!");
+      res.setHeader('WWW-Authenticate','Basic');
+      err.status = 401;
+      return next(err);
+    }
+
+    
+
+    const auth = Buffer.from(authHeader.split(' ')[1], 'base64').toString().split(':');// why need space in empty string
+    const user = auth[0];
+    const pass = auth[1];
+    if (user === 'admin' && pass === 'password') {
+      return next();
+    } else {
+      const err = new Error("You are not authenticated!");
+      res.setHeader('WWW-Authenticate','Basic');
+      err.status = 401;
+      return next(err);      
+    }
+}
+
+app.use(auth);
+
 app.use(express.static(path.join(__dirname, "public")));
 
 app.use("/", indexRouter);
