@@ -11,19 +11,19 @@ const promotionRouter = require("./routes/promotionRouter");
 const partnerRouter = require("./routes/partnerRouter");
 const { Mongoose } = require("mongoose");
 
+const mongoose = require("mongoose");
 
-const mongoose = require('mongoose');
-
-const url = 'mongodb://localhost:27017/nucampsite';
+const url = "mongodb://localhost:27017/nucampsite";
 const connect = mongoose.connect(url, {
   useCreateIndex: true,
   useFindAndModify: false,
   useNewUrlParser: true,
-  useUnifiedTopology: true
+  useUnifiedTopology: true,
 });
 
-connect.then(() => console.log('Connected correctly to server'),
-  err => console.log(err)
+connect.then(
+  () => console.log("Connected correctly to server"),
+  (err) => console.log(err)
 );
 
 var app = express();
@@ -35,38 +35,49 @@ app.set("view engine", "jade");
 app.use(logger("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser());
+app.use(cookieParser("12345-67890-98765-43210"));
 
 //
 //
-//this is where authentication will take place 
+//this is where authentication will take place
 //this is the first middleware that is sending back to client
 //so if auth fails here everything is locked after
 
 /*this next lets us know if truthy move on to next middleware*/
-function auth(req,res,next) {
-  console.log(req.headers);
-  const authHeader = req.headers.authorization;
+function auth(req, res, next) {
+  if (!req.signedCookies.user) {
+    const authHeader = req.headers.authorization;
     if (!authHeader) {
       const err = new Error("You are not authenticated!");
-      res.setHeader('WWW-Authenticate','Basic');
+      res.setHeader("WWW-Authenticate", "Basic");
       err.status = 401;
       return next(err);
     }
 
-    
+    const auth = Buffer.from(authHeader.split(" ")[1], "base64")
+      .toString()
+      .split(":"); // why need space in empty string
 
-    const auth = Buffer.from(authHeader.split(' ')[1], 'base64').toString().split(':');// why need space in empty string
     const user = auth[0];
     const pass = auth[1];
-    if (user === 'admin' && pass === 'password') {
-      return next();
+    if (user === "admin" && pass === "password") {
+      res.cookie("user", "admin", { signed: true });
+      return next(); //authorized
     } else {
       const err = new Error("You are not authenticated!");
-      res.setHeader('WWW-Authenticate','Basic');
+      res.setHeader("WWW-Authenticate", "Basic");
       err.status = 401;
-      return next(err);      
+      return next(err);
     }
+  } else {
+    if (req.signedCookies.user === "admin") {
+      return next(); //pass on to next middleware function
+    } else {
+      const err = new Error("You are not authenticated!");
+      err.status = 401;
+      return next(err);
+    }
+  }
 }
 
 app.use(auth);
