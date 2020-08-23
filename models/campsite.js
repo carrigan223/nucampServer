@@ -59,3 +59,4 @@ const campsiteSchema = new Schema({
 const Campsite = mongoose.model('Campsites', campsiteSchema);
 
 module.exports = Campsite;
+
