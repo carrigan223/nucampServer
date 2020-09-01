@@ -48,7 +48,7 @@ exports.verifyAdmin = (req, res, next) => {
   }
 };
 
-
+//this is using facebook OAuth to generate our user token using facebook profile data
 exports.facebookPassport = passport.use(
   new FacebookTokenStrategy(
     {

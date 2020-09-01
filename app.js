@@ -11,6 +11,7 @@ const campsiteRouter = require("./routes/campsiteRouter");
 const promotionRouter = require("./routes/promotionRouter");
 const partnerRouter = require("./routes/partnerRouter");
 const uploadRouter = require('./routes/uploadRouter');
+const favoriteRouter = require('./routes/favoriteRouter');
 const { Mongoose } = require("mongoose");
 
 const mongoose = require("mongoose");
@@ -68,10 +69,11 @@ app.use("/users", usersRouter);
 
 app.use(express.static(path.join(__dirname, "public")));
 
-app.use("/campsites", campsiteRouter);
+app.use("/campsites", campsiteRouter);//these use methods are assigning the routes and linking to the router
 app.use("/partners", partnerRouter);
 app.use("/promotions", promotionRouter);
 app.use("/imageUpload", uploadRouter);
+app.use('/favorite', favoriteRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
